@@ -1,10 +1,8 @@
+
 name: Build APK
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'RegenteOcoAndroid-Projeto-CloudBuild.zip'
 
 jobs:
   build:
@@ -23,16 +21,20 @@ jobs:
       - name: Extract project
         run: |
           unzip -o RegenteOcoAndroid-Projeto-CloudBuild.zip -d projeto
-          ls -la projeto
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
       - name: Build APK
         run: |
-          cd projeto
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          PROJECT_DIR=$(find projeto -name settings.gradle.kts -printf '%h\n' | head -n 1)
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: Regente-Oco-APK
-          path: projeto/app/build/outputs/apk/debug/*.apk
+          path: projeto/**/build/outputs/apk/debug/*.apk
