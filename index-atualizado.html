@@ -39,6 +39,29 @@ canvas{width:min(100%,calc((100vh - 8px)*1.7778));aspect-ratio:16/9;display:bloc
 #game-menu .back{margin-top:18px;background:transparent}
 #game-menu .note{margin-top:18px;color:#77849a;font:11px/1.5 Arial,sans-serif}
 body.menu-open #touch-controls,body.menu-open #touch-extra{display:none!important}
+
+/* REFINAMENTO VISUAL: menu, controles e HUD */
+#game-menu{background:radial-gradient(ellipse at 50% 42%,#263047 0%,#101522 36%,#030509 82%);backdrop-filter:blur(3px)}
+#game-menu:before{content:"";position:absolute;inset:18px;border:1px solid #a8b6d044;pointer-events:none}
+#game-menu .menu-panel{position:relative;width:min(88vw,420px);padding:clamp(26px,7vw,42px);border:1px solid #9aa9c077;background:linear-gradient(155deg,#1a2333f5,#080b13f8 65%);box-shadow:0 24px 90px #000e,inset 0 0 0 5px #111a28,inset 0 0 45px #8294b322}
+#game-menu h1{font-size:clamp(28px,7.5vw,44px);letter-spacing:.16em;color:#f0eee8;text-shadow:0 2px 0 #202838,0 0 28px #9db7e988}
+#game-menu .subtitle{letter-spacing:.2em;color:#a8b5c8}
+#game-menu .menu-btn{position:relative;overflow:hidden;border:1px solid #8393ad;background:linear-gradient(110deg,#26344a,#111a29 58%,#202b3d);color:#f1eee6;padding:16px 14px;font-size:14px;letter-spacing:.2em;box-shadow:inset 0 1px #ffffff22,0 5px 14px #0008;transition:transform .15s,border-color .15s,filter .15s}
+#game-menu .menu-btn:before{content:"";position:absolute;inset:4px;border:1px solid #c6d2e51c;pointer-events:none}
+#game-menu .menu-btn:after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#9fb9d8;opacity:.8}
+#game-menu .menu-btn:active{background:linear-gradient(110deg,#536783,#26364d);transform:translateY(1px) scale(.99);filter:brightness(1.2)}
+#game-menu .slot{padding:17px 16px}
+#game-menu .slot small{color:#b3bfd0}
+#game-menu .note{color:#98a5b8}
+@media(pointer:coarse){
+ #touch-controls{padding:0 12px;bottom:max(12px,env(safe-area-inset-bottom,0px));}
+ .touch-cluster{gap:8px}
+ .touch-btn,.touch-btn.action{width:clamp(50px,12vw,64px);height:clamp(50px,12vw,64px);border:1px solid #a9b9d6aa;border-radius:17px 17px 12px 12px;background:linear-gradient(145deg,#26354bdf,#090e19f2);color:#f1eee8;font-size:18px;font-weight:800;text-shadow:0 1px 4px #000;box-shadow:inset 0 1px #ffffff30,inset 0 -4px 0 #0006,0 5px 15px #000b;backdrop-filter:blur(5px)}
+ .touch-btn.action{font-size:10px;letter-spacing:.04em}
+ .touch-btn:active,.touch-btn.down{background:linear-gradient(145deg,#8299b8,#354963);border-color:#e0e9f5;transform:translateY(2px);box-shadow:inset 0 2px 7px #0008}
+ #touch-extra .touch-btn{width:40px;height:40px;font-size:13px;border-radius:12px}
+}
+
 </style></head><body><div id="game-menu" role="dialog" aria-modal="true" aria-label="Menu do jogo"><div class="menu-panel"><h1>O REGENTE OCO</h1><p class="subtitle">A luz não encontrará o caminho</p><div id="menu-main"><button class="menu-btn" id="menu-play">JOGAR</button><button class="menu-btn" id="menu-github">GITHUB</button><button class="menu-btn" id="menu-exit">SAIR</button></div><div id="menu-saves" hidden><h2 style="font-weight:normal;letter-spacing:.12em;margin:0 0 18px">ESCOLHA SEU SAVE</h2><div id="save-slots"></div><button class="menu-btn back" id="menu-back">VOLTAR</button></div><p class="note" id="menu-note">Escolha uma opção para continuar.</p></div></div><canvas id="c"></canvas>
 <div id="touch-controls" aria-label="Controles de toque">
   <div class="touch-cluster">
@@ -558,7 +581,7 @@ X.drawImage(L,0,0);
 if(G.flash>0){X.fillStyle=`rgba(${G.fc},${Math.min(1,G.flash)*.6})`;X.fillRect(0,0,W,H)}
 const v=X.createRadialGradient(W/2,H/2,H*.4,W/2,H/2,H*.95);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.65)');X.fillStyle=v;X.fillRect(0,0,W,H)}
 function hud(){X.textAlign='left';
-for(let i=0;i<pl.max;i++){const x=34+i*30,y=34;X.fillStyle=i<pl.hp?'#e8ecf2':'rgba(232,236,242,.12)';X.beginPath();X.ellipse(x,y,10,12,0,0,6.3);X.fill();X.fillStyle=i<pl.hp?'#0a0c12':'rgba(0,0,0,.4)';X.beginPath();X.ellipse(x+3,y-1,2,4,0,0,6.3);X.fill();X.beginPath();X.ellipse(x-3,y-1,2,4,0,0,6.3);X.fill()}
+for(let i=0;i<pl.max;i++){const x=36+i*32,y=36,full=i<pl.hp;X.save();X.translate(x,y);X.scale(.92,.92);X.beginPath();X.moveTo(0,11);X.bezierCurveTo(-4,7,-14,0,-13,-7);X.bezierCurveTo(-12,-17,-1,-17,0,-8);X.bezierCurveTo(3,-18,14,-16,14,-6);X.bezierCurveTo(14,1,5,8,0,11);const hg=X.createLinearGradient(0,-16,0,12);hg.addColorStop(0,full?'#fff0f0':'#596170');hg.addColorStop(.38,full?'#e45a70':'#252c38');hg.addColorStop(1,full?'#781d35':'#10151e');X.fillStyle=hg;X.fill();X.lineWidth=1.8;X.strokeStyle=full?'#ffd2d8':'#778397';X.stroke();if(full){X.fillStyle='#ffffff55';X.beginPath();X.ellipse(-5,-8,3,5,-.5,0,6.3);X.fill()}X.restore()}
 if(G.locked&&B.st!='sleep'&&B.st!='die'||B.st=='die'&&B.alpha>0){const bx=220,by=498,bw=520,f=Math.max(0,B.hp/B.max);X.fillStyle='rgba(0,0,0,.6)';X.fillRect(bx-4,by-4,bw+8,18);
 const g=X.createLinearGradient(bx,0,bx+bw,0);g.addColorStop(0,B.k?(B.ph==2?'#2d6a1a':'#3a7a4a'):B.ph==2?'#7a0f2e':'#5d77a8');g.addColorStop(1,B.k?(B.ph==2?'#c8ff5a':'#8aff9a'):B.ph==2?'#ff3a66':'#cfe0ff');X.fillStyle=g;X.fillRect(bx,by,bw*f,10);
 X.fillStyle='rgba(255,255,255,.7)';X.fillRect(bx+bw*.3-1,by-4,2,18);X.textAlign='center';X.fillStyle='#cfd6e4';X.font='15px Georgia';X.fillText(BOSS[B.k].name,W/2,by-10)}
@@ -571,7 +594,7 @@ function showMainMenu(){menuOpen=true;document.body.classList.add('menu-open');d
 function showSaveSlots(){document.getElementById('menu-main').hidden=true;document.getElementById('menu-saves').hidden=false;const box=document.getElementById('save-slots');box.innerHTML='';for(let n=1;n<=3;n++){const data=readSlot(n);const b=document.createElement('button');b.className='menu-btn slot';b.innerHTML='SAVE '+n+'<small>'+(data?'Aventura salva · '+(Number(data.coins)||0)+' fragmentos':'Novo jogo · vazio')+'</small>';b.addEventListener('click',()=>{if(!data&&!confirm('Começar uma nova aventura neste espaço?'))return;activeSlot=n;const fresh=data||{...SAVE_DEFAULT};for(const k in S)delete S[k];Object.assign(S,SAVE_DEFAULT,fresh);sv();menuOpen=false;document.body.classList.remove('menu-open');document.getElementById('game-menu').style.display='none';reset();last=0;acc=0});box.appendChild(b)}}
 document.getElementById('menu-play').addEventListener('click',showSaveSlots);
 document.getElementById('menu-back').addEventListener('click',showMainMenu);
-document.getElementById('menu-github').addEventListener('click',()=>window.open('https://github.com/arthurkarger/Hollow-regent','_blank','noopener'));
-document.getElementById('menu-exit').addEventListener('click',()=>{document.getElementById('menu-note').textContent='Para sair, feche esta aba ou o aplicativo.';try{window.close()}catch(e){}});
+document.getElementById('menu-github').addEventListener('click',()=>{window.location.href='https://github.com/arthurkarger/Hollow-regent';});
+document.getElementById('menu-exit').addEventListener('click',()=>{try{if(window.Android&&typeof window.Android.closeApp==='function'){window.Android.closeApp();return;}if(window.Android&&typeof window.Android.exitApp==='function'){window.Android.exitApp();return;}}catch(e){}document.getElementById('menu-note').textContent='O Android precisa autorizar o fechamento do aplicativo. Use o botão Voltar do aparelho para sair.';});
 showMainMenu();requestAnimationFrame(loop);
 </script></body></html>
