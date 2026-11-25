@@ -26,7 +26,20 @@ canvas{width:min(100%,calc((100vh - 8px)*1.7778));aspect-ratio:16/9;display:bloc
   .touch-btn{width:48px;height:48px}
   .touch-btn.action{width:52px;height:52px}
 }
-</style></head><body><canvas id="c"></canvas>
+
+/* MENU PRINCIPAL */
+#game-menu{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:22px;background:radial-gradient(ellipse at 50% 38%,#182033 0%,#080b13 48%,#020308 100%);color:#dce5f4;font-family:Georgia,serif}
+#game-menu .menu-panel{width:min(92vw,440px);padding:clamp(22px,6vw,38px);border:1px solid #59647b88;background:linear-gradient(145deg,#111827ed,#05070df5);box-shadow:0 20px 80px #000c,inset 0 0 35px #8294b31a;text-align:center}
+#game-menu h1{margin:0 0 8px;font-size:clamp(30px,8vw,48px);letter-spacing:.12em;color:#e6eaf3;text-shadow:0 0 22px #9db7e966}
+#game-menu .subtitle{margin:0 0 28px;color:#8795ad;font-size:12px;letter-spacing:.28em;text-transform:uppercase}
+#game-menu .menu-btn{display:block;width:100%;margin:11px 0;padding:14px 12px;border:1px solid #64738d88;background:linear-gradient(90deg,#1a2435,#101827);color:#e5ebf5;font: bold 15px Georgia,serif;letter-spacing:.16em}
+#game-menu .menu-btn:active{background:#35445d;transform:scale(.985)}
+#game-menu .slot{position:relative;text-align:left;padding:15px 14px;letter-spacing:.04em}
+#game-menu .slot small{display:block;margin-top:6px;color:#9aa8bd;font:12px Arial,sans-serif;letter-spacing:0}
+#game-menu .back{margin-top:18px;background:transparent}
+#game-menu .note{margin-top:18px;color:#77849a;font:11px/1.5 Arial,sans-serif}
+body.menu-open #touch-controls,body.menu-open #touch-extra{display:none!important}
+</style></head><body><div id="game-menu" role="dialog" aria-modal="true" aria-label="Menu do jogo"><div class="menu-panel"><h1>O REGENTE OCO</h1><p class="subtitle">A luz não encontrará o caminho</p><div id="menu-main"><button class="menu-btn" id="menu-play">JOGAR</button><button class="menu-btn" id="menu-github">GITHUB</button><button class="menu-btn" id="menu-exit">SAIR</button></div><div id="menu-saves" hidden><h2 style="font-weight:normal;letter-spacing:.12em;margin:0 0 18px">ESCOLHA SEU SAVE</h2><div id="save-slots"></div><button class="menu-btn back" id="menu-back">VOLTAR</button></div><p class="note" id="menu-note">Escolha uma opção para continuar.</p></div></div><canvas id="c"></canvas>
 <div id="touch-controls" aria-label="Controles de toque">
   <div class="touch-cluster">
     <button class="touch-btn" data-hold="ArrowLeft" aria-label="Mover para esquerda">◀</button>
@@ -91,8 +104,14 @@ const LIGHTS=[{x:240,y:GY-26,c:'#4a9cff',k:'cry'},{x:620,y:150,c:'#7fd6ff',k:'or
 for(let i=0;i<6;i++)LIGHTS.push({x:1535+i*230,y:GY-34,r:210,a:.5,c:'#b05cff',k:'br'});
 const MT=[...Array(70)].map(()=>({x:rnd(0,WW),y:rnd(80,GY),v:rnd(3,12),p:rnd(0,6)}));
 // ================= ESTADO =================
-const S={coins:0,dmg:0,reach:0,spd:0,st:0,flk:0,flh:0,vit:0,agi:0,leg:0};try{Object.assign(S,JSON.parse(localStorage.getItem('regente')||'{}'))}catch(e){}
-const sv=()=>{try{localStorage.setItem('regente',JSON.stringify(S))}catch(e){}};
+const SAVE_DEFAULT={coins:0,dmg:0,reach:0,spd:0,st:0,flk:0,flh:0,vit:0,agi:0,leg:0};
+let activeSlot=1,menuOpen=true;
+const slotKey=n=>'regente_save_'+n;
+let legacySave=null;try{legacySave=JSON.parse(localStorage.getItem('regente')||'null')}catch(e){}
+try{if(!localStorage.getItem(slotKey(1))&&legacySave)localStorage.setItem(slotKey(1),JSON.stringify(legacySave))}catch(e){}
+const readSlot=n=>{try{return JSON.parse(localStorage.getItem(slotKey(n))||'null')}catch(e){return null}};
+const S={...SAVE_DEFAULT,...(readSlot(1)||legacySave||{})};
+const sv=()=>{try{localStorage.setItem(slotKey(activeSlot),JSON.stringify(S))}catch(e){}};
 let G,pl,B;
 function reset(){
 G={co:[],sp:[],th:S.st>0?1:0,t:0,state:'play',locked:false,shake:0,stop:0,flash:0,fc:'255,255,255',cam:0,parts:[],shots:[],waves:[],fx:[],bn:{t:0},p2:false,gate:0,over:0,hb:0};
@@ -213,7 +232,7 @@ if(B.ph==2&&B.st!='die'&&(G.hb-=dt)<=0){G.hb=.85;sfx(55,.25,'sine',.14,35)}
 if(G.state!='play')G.over+=dt;
 const tx=clamp(pl.x-W/2+pl.f*60,0,WW-W);G.cam+=(tx-G.cam)*Math.min(1,dt*6)}
 let last=0,acc=0;
-function loop(ts){requestAnimationFrame(loop);const d=Math.min(.05,(ts-last)/1000||0);last=ts;acc+=d;let st=0;
+function loop(ts){requestAnimationFrame(loop);if(menuOpen)return;const d=Math.min(.05,(ts-last)/1000||0);last=ts;acc+=d;let st=0;
 while(acc>=1/60){acc-=1/60;if(G.stop>0)G.stop-=1/60;else update(1/60);st=1}
 if(st)for(const k in pressed)delete pressed[k];render()}
 // ================= RENDER =================
@@ -547,5 +566,12 @@ X.textAlign='center';
 if(G.bn.t>0){const a=Math.min(1,G.bn.t,(3.6-G.bn.t)*2);X.globalAlpha=Math.max(0,a);X.fillStyle=G.bn.a=='SEGUNDA FASE'?'#ff5a80':'#e8ecf2';X.font='italic 46px Georgia';X.fillText(G.bn.a,W/2,200);X.fillStyle='#aab4c6';X.font='18px Georgia';X.fillText(G.bn.b,W/2,232);X.globalAlpha=1}
 if(!G.locked&&G.t<14||G.t<6){X.fillStyle='rgba(200,214,232,.75)';X.font='15px Georgia';X.fillText('← → mover   ·   Z / Espaço pular   ·   X atacar   ·   C dash (invulnerável)   ·   E falar   ·   Q curar   ·   R reiniciar',W/2,H-18)}
 if(G.state=='win'||G.state=='lose'){const a=Math.max(0,G.state=='win'?Math.min(1,G.over*.8,(4-G.over)*.8):Math.min(1,G.over*.8));X.fillStyle=`rgba(0,0,0,${a*.55})`;X.fillRect(0,0,W,H);X.globalAlpha=a;const w=G.state=='win';X.fillStyle=w?'#f2f4fa':'#ff6a7a';X.font='italic 64px Georgia';X.fillText(w?'VITÓRIA':'VOCÊ SUCUMBIU',W/2,250);X.fillStyle='#b8c2d4';X.font='20px Georgia';X.fillText(w?BOSS[S.st].win:'A escuridão da arena cobre a sua luz.',W/2,290);X.fillText('Pressione R para jogar novamente',W/2,330);X.globalAlpha=1}}
-reset();requestAnimationFrame(loop);
+reset();
+function showMainMenu(){menuOpen=true;document.body.classList.add('menu-open');document.getElementById('menu-main').hidden=false;document.getElementById('menu-saves').hidden=true;document.getElementById('menu-note').textContent='Escolha uma opção para continuar.';document.getElementById('game-menu').style.display='flex'}
+function showSaveSlots(){document.getElementById('menu-main').hidden=true;document.getElementById('menu-saves').hidden=false;const box=document.getElementById('save-slots');box.innerHTML='';for(let n=1;n<=3;n++){const data=readSlot(n);const b=document.createElement('button');b.className='menu-btn slot';b.innerHTML='SAVE '+n+'<small>'+(data?'Aventura salva · '+(Number(data.coins)||0)+' fragmentos':'Novo jogo · vazio')+'</small>';b.addEventListener('click',()=>{if(!data&&!confirm('Começar uma nova aventura neste espaço?'))return;activeSlot=n;const fresh=data||{...SAVE_DEFAULT};for(const k in S)delete S[k];Object.assign(S,SAVE_DEFAULT,fresh);sv();menuOpen=false;document.body.classList.remove('menu-open');document.getElementById('game-menu').style.display='none';reset();last=0;acc=0});box.appendChild(b)}}
+document.getElementById('menu-play').addEventListener('click',showSaveSlots);
+document.getElementById('menu-back').addEventListener('click',showMainMenu);
+document.getElementById('menu-github').addEventListener('click',()=>window.open('https://github.com/arthurkarger/Hollow-regent','_blank','noopener'));
+document.getElementById('menu-exit').addEventListener('click',()=>{document.getElementById('menu-note').textContent='Para sair, feche esta aba ou o aplicativo.';try{window.close()}catch(e){}});
+showMainMenu();requestAnimationFrame(loop);
 </script></body></html>
