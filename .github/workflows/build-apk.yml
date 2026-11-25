@@ -1,0 +1,38 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'RegenteOcoAndroid-Projeto-CloudBuild.zip'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract project
+        run: |
+          unzip -o RegenteOcoAndroid-Projeto-CloudBuild.zip -d projeto
+          ls -la projeto
+
+      - name: Build APK
+        run: |
+          cd projeto
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Regente-Oco-APK
+          path: projeto/app/build/outputs/apk/debug/*.apk
