@@ -22,9 +22,33 @@ jobs:
         run: |
           unzip -o RegenteOcoAndroid-Projeto-CloudBuild.zip -d projeto
 
+      - name: Install updated game HTML
+        run: |
+          SOURCE="index-atualizado.html"
+
+          if [ ! -f "$SOURCE" ]; then
+            echo "ERRO: index-atualizado.html não encontrado."
+            exit 1
+          fi
+
+          mapfile -t TARGETS < <(find projeto -type f -path '*/app/src/main/assets/*' -name 'index.html')
+
+          if [ "${#TARGETS[@]}" -eq 0 ]; then
+            echo "ERRO: index.html não encontrado na pasta assets."
+            echo "Arquivos HTML encontrados:"
+            find projeto -type f -name '*.html' -print
+            exit 1
+          fi
+
+          for TARGET in "${TARGETS[@]}"; do
+            cp "$SOURCE" "$TARGET"
+            echo "Jogo atualizado em: $TARGET"
+          done
+
       - name: Fix Java and Kotlin targets
         run: |
           FILE=$(find projeto -path '*/app/build.gradle.kts' | head -n 1)
+
           python3 - "$FILE" <<'PY'
           import sys
           from pathlib import Path
