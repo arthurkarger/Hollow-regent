@@ -5,6 +5,10 @@ html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
 body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:Georgia,'Times New Roman',serif;display:flex;align-items:center;justify-content:center;overflow:hidden}
 canvas{width:min(100%,calc((100vh - 8px)*1.7778));aspect-ratio:16/9;display:block;touch-action:none}
 #touch-controls{display:none}
+/* Plataforma: controles de toque somente em dispositivos móveis */
+body.is-pc #touch-controls,body.is-pc #touch-extra{display:none!important}
+body.is-mobile #touch-controls{display:flex}
+body.is-mobile #touch-extra{display:flex}
 @media (pointer:coarse){
   body{position:relative}
   #touch-controls{display:flex;position:fixed;inset:auto 0 max(10px,env(safe-area-inset-bottom,0px)) 0;
@@ -101,6 +105,16 @@ const rnd=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),
 const keys={},pressed={};
 addEventListener('keydown',e=>{if(!keys[e.code])pressed[e.code]=1;keys[e.code]=1;initAudio();if(/Space|Arrow/.test(e.code))e.preventDefault()});
 addEventListener('keyup',e=>keys[e.code]=0);
+// Detecta dispositivo móvel/PC e adapta os controles sem recarregar.
+const mobileQuery=window.matchMedia('(pointer:coarse)');
+function updatePlatform(){document.body.classList.toggle('is-mobile',mobileQuery.matches);document.body.classList.toggle('is-pc',!mobileQuery.matches)}
+updatePlatform();
+if(mobileQuery.addEventListener)mobileQuery.addEventListener('change',updatePlatform);
+else if(mobileQuery.addListener)mobileQuery.addListener(updatePlatform);
+// No PC, o botão esquerdo do mouse executa o mesmo ataque da tecla X.
+C.addEventListener('mousedown',e=>{if(!mobileQuery.matches&&e.button===0&&!menuOpen){e.preventDefault();pressed.KeyX=1;keys.KeyX=1;initAudio()}});
+addEventListener('mouseup',e=>{if(e.button===0)keys.KeyX=0});
+C.addEventListener('contextmenu',e=>e.preventDefault());
 // Controles por toque: direções podem ficar pressionadas; ações são toques rápidos.
 document.querySelectorAll('[data-hold],[data-tap]').forEach(btn=>{
   const code=btn.dataset.hold||btn.dataset.tap;
